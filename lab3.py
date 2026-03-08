@@ -50,11 +50,31 @@ class RBNode:
     def __repr__(self):
          return "(" + str(self.value) + "," + self.colour + ")"
 
+    # Make a left leaning red link lean right (temporarily)
     def rotate_right(self):
-        #TODO
+        # self.is_red(self.left)
+        # self.value > self.left.value 
 
+        nx = self.left          # Get left node 
+        self.left = nx.right    # Set current nodes left pointer to nx right 
+        nx.right = self         # Set nx right pointer to current node 
+        nx.colour = self.colour # Make nx same colour as current node
+        self.colour = "R"       # Make current node red
+
+
+        return nx 
+
+    # Rotate left if right leaning red link 
     def rotate_left(self):
-        #TODO
+        # self.is_red(self.right)
+        # self.value < self.right.value 
+        nx = self.right         # Get right node 
+        self.right = nx.left    # Set current nodes right pointer to nx left 
+        nx.left = self          # Set nx left pointer to current node 
+        nx.colour = self.colour # Make nx same colour as current node
+        self.colour = "R"       # Make current node red
+
+        return nx
 
 
 
@@ -105,7 +125,11 @@ class RBTree:
             node.make_black()
         while node != None and node.parent != None and node.parent.is_red(): 
             #TODO
+            return 
+        
         self.root.make_black()
+
+        return
                     
         
     def __str__(self):
