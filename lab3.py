@@ -52,29 +52,39 @@ class RBNode:
 
     # Make a left leaning red link lean right (temporarily)
     def rotate_right(self):
+        # Preconditions
         # self.is_red(self.left)
         # self.value > self.left.value 
 
-        nx = self.left          # Get left node 
-        self.left = nx.right    # Set current nodes left pointer to nx right 
-        nx.right = self         # Set nx right pointer to current node 
-        nx.colour = self.colour # Make nx same colour as current node
-        self.colour = "R"       # Make current node red
+        # Left node exists
+        if self.left is not None:
 
+            nx = self.left          # Get left node 
+            self.left = nx.right    # Set current nodes left pointer to nx right 
+            nx.right = self         # Set nx right pointer to current node 
+            nx.colour = self.colour # Make nx same colour as current node
+            self.colour = "R"       # Make current node red
 
-        return nx 
+            return nx 
+        
+        return self # Return original node if left node empty 
 
     # Rotate left if right leaning red link 
     def rotate_left(self):
         # self.is_red(self.right)
         # self.value < self.right.value 
-        nx = self.right         # Get right node 
-        self.right = nx.left    # Set current nodes right pointer to nx left 
-        nx.left = self          # Set nx left pointer to current node 
-        nx.colour = self.colour # Make nx same colour as current node
-        self.colour = "R"       # Make current node red
 
-        return nx
+        # Right node exists
+        if self.right is not None: 
+            nx = self.right         # Get right node 
+            self.right = nx.left    # Set current nodes right pointer to nx left 
+            nx.left = self          # Set nx left pointer to current node 
+            nx.colour = self.colour # Make nx same colour as current node
+            self.colour = "R"       # Make current node red
+
+            return nx
+        
+        return self # Return original node if right node empty     
 
 
 
@@ -120,12 +130,35 @@ class RBTree:
                 self.__insert(node.right, value)
 
     def fix(self, node):
+
+        # From Algorithms, 4th Edition by Robert Sedgewick and Kevin Wayn
+
+        # right child red, and left child is not
+        # Rotate left 
+        if node.right.is_red() and not node.left.is_red(): 
+            node = node.rotate_left() 
+
+        # Left child red, and left grandchild red (Long red chain)
+        # Rotate right
+        if node.left.is_red() and node.left.left.is_red(): 
+            node = node.rotate_right()
+
+        # 4 node so propagate up (Flip colours)
+        if node.left.is_red() and node.right.is_red(): 
+            # node is not red 
+            node.colour = "R"
+            node.left.colour = "B"
+            node.right.colour = "B"
+
+
         #You may alter code in this method if you wish, it's merely a guide.
-        if node.parent == None:
-            node.make_black()
-        while node != None and node.parent != None and node.parent.is_red(): 
+        #if node.parent == None:
+        #   node.make_black()
+        
+
+        #while node != None and node.parent != None and node.parent.is_red(): 
             #TODO
-            return 
+        #    return 
         
         self.root.make_black()
 
