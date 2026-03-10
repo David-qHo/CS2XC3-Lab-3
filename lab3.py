@@ -283,3 +283,42 @@ def experiment1(n):
 
 
     return 
+
+
+# ************** XC3 Tree Implementation *******************
+class XC3Node:
+    def __init__(self, degree):
+        self.degree = degree
+        self.children = []
+        self._build_tree()
+
+    def _build_tree(self):
+        for j in range(1, self.degree + 1):
+            child_degree = (j - 2) if j > 2 else 0
+            self.children.append(XC3Node(child_degree))
+
+    def get_num_nodes(self):
+        return 1 + sum(child.get_num_nodes() for child in self.children)
+
+    def get_height(self):
+        if not self.children:
+            return 1
+        return 1 + max(child.get_height() for child in self.children)
+
+
+
+
+def experiment3_4():
+    for i in range(26):
+        tree = XC3Node(i)
+        nodes = tree.get_num_nodes()
+        height = tree.get_height()
+        print("--------------------------")
+        print("Degree: " + str(i))
+        print("Number of nodes: " + str(nodes))
+        print("Height: " + str(height))
+        print("--------------------------")
+    
+    return
+
+experiment3_4()
