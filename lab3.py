@@ -1,4 +1,6 @@
 import random 
+import sys 
+sys.setrecursionlimit(100000)
 
 class RBNode:
 
@@ -53,42 +55,70 @@ class RBNode:
          return "(" + str(self.value) + "," + self.colour + ")"
 
     # Make a left leaning red link lean right (temporarily)
+    # Move left child to position of self 
     def rotate_right(self):
         # Preconditions
         # self.is_red(self.left)
         # self.value > self.left.value 
-
-        # Left node exists
-        if self.left is not None:
-
-            nx = self.left          # Get left node 
-            self.left = nx.right    # Set current nodes left pointer to nx right 
-            nx.right = self         # Set nx right pointer to current node 
-            nx.colour = self.colour # Make nx same colour as current node
-            self.colour = "R"       # Make current node red
-
-            return nx 
         
-        return self # Return original node if left node empty 
+        nx = self.left
+        if nx != None:
+        
+            #  Make self left tree nx right tree
+            self.left = nx.right
+            if nx.right != None: # Change parent of nx.right
+                nx.right.parent = self
+                
+            # Make nx parent self.parent 
+            nx.parent = self.parent
+            if self.parent != None:
+                # Update new parent child pointers
+                if self.is_left_child():
+                    self.parent.left = nx
+                else:
+                    self.parent.right = nx
+            
+            # Make self nx right child and self parent 
+            nx.right = self
+            self.parent = nx
+            return nx
+        
+        else: 
+            return self 
 
     # Rotate left if right leaning red link 
+    # Move right child to position of self 
     def rotate_left(self):
         # self.is_red(self.right)
         # self.value < self.right.value 
+        nx = self.right
+        if nx != None:
 
-        # Right node exists
-        if self.right is not None: 
-            nx = self.right         # Get right node 
-            self.right = nx.left    # Set current nodes right pointer to nx left 
-            nx.left = self          # Set nx left pointer to current node 
-            nx.colour = self.colour # Make nx same colour as current node
-            self.colour = "R"       # Make current node red
+            # Make self right point to nx left 
+            self.right = nx.left
+
+            # Update nx left parent 
+            if nx.left != None:
+                nx.left.parent = self
+
+            # Make nx parent self 
+            nx.parent = self.parent
+            if self.parent:
+                # Update child pointers of nx parent 
+                if self.is_left_child():
+                    self.parent.left = nx
+                else:
+                    self.parent.right = nx
+
+            # Make self nx left child
+            # Update self parent     
+            nx.left = self
+            self.parent = nx
 
             return nx
         
-        return self # Return original node if right node empty     
-
-
+        else:
+            return self
 
 class RBTree:
 
@@ -136,52 +166,99 @@ class RBTree:
     # Don't fix the tree every height, you have to go up the tree and fix it 
     # node inserted is initialized as red
     def fix(self, node):
-
-        # Root 
-        if node.parent is None: 
-            return node 
-        
-        # If leaf 
-        if node.left is None and node.right is None: 
-            return node.fix(node.parent)
-        # From Algorithms, 4th Edition by Robert Sedgewick and Kevin Wayn
-
-        # right child red, and left child is not
-        # Rotate left 
-        if node.right.is_red() and not node.left.is_red(): 
-            node = node.rotate_left() 
-
-        # Left child red, and left grandchild red (Long red chain)
-        # Rotate right
-        if node.left.is_red() and node.left.left.is_red(): 
-            node = node.rotate_right()
-
-        # 4 node so propagate up (Flip colours)
-        if node.left.is_red() and node.right.is_red(): 
-            # node is not red 
-            node.colour = "R"
-            node.left.colour = "B"
-            node.right.colour = "B"
-
-        node.fix(node.parent) 
+        # print(f"fixing: {node}")
+      
 
         #You may alter code in this method if you wish, it's merely a guide.
-        #if node.parent == None:
-        #   node.make_black()
+        # Root 
+        if node.parent == None:
+            node.make_black()
         
         # https://www.geeksforgeeks.org/dsa/insertion-in-red-black-tree/
         # parent red, and current node is red (initially) as new nodes are created as red
         # 
-        # while node != None and node.parent != None and node.parent.is_red(): 
-            # C1 right child red, and left child not 
+        while node != None and node.parent != None and node.parent.is_red(): 
 
-            #TODO
-        #    return 
+            parent = node.parent 
+            gp = parent.parent 
+
+            if gp is None: 
+                break ## this is the root 
+
+            if parent.is_left_child(): 
+                uncle = gp.right 
+
+                # C1: Uncle is red (parent also red)
+                # Flip colours
+                if uncle != None and uncle.is_red(): 
+                    parent.make_black() 
+                    uncle.make_black() 
+                    gp.make_red() 
+                    node = gp # Move pointe up tree 
+                    # if node.parent != None: 
+                    #     parent = node.parent 
+                    #     gp = parent.parent
+
+                else: # Uncle is None or uncle is black
+                    
+                    # Red right child, red parent 
+                    if node.is_right_child(): 
+                        node = parent 
+                        newNode = node.rotate_left()
+                        if newNode != None and newNode.parent is None: 
+                            self.root = newNode
+
+                        parent = node.parent # Node is now in parents position, so update parent
+
+                        # if parent != None: 
+                        #     gp = parent.parent  
+
+                    if parent != None: 
+                        parent.make_black() 
+                    
+                    # New root 
+                    elif parent is None: 
+                        self.root = node
+                        break
+                    
+                    if parent != None and gp != None:
+                        gp.make_red() 
+                        newNode = gp.rotate_right()
+                        if newNode != None and newNode.parent is None: 
+                            self.root = newNode
+
+            else: 
+                uncle = gp.left 
+
+                if uncle != None and uncle.is_red(): 
+                    parent.make_black() 
+                    uncle.make_black() 
+                    gp.make_red() 
+                    node = gp # Move up tree
+
+                else: 
+                    if node.is_left_child(): 
+                        node = parent 
+                        newNode = node.rotate_right() 
+                        if newNode != None and newNode.parent is None: 
+                            self.root = newNode
+                        parent = node.parent # Not sure if needed
+
+                    if parent != None: 
+                        parent.make_black()
+                    
+                    elif parent is None: 
+                        self.root = node
+
+                    gp.make_red() 
+                    newNode = gp.rotate_left() 
+                    if newNode != None and newNode.parent is None: 
+                            self.root = newNode
+
+
         
         self.root.make_black()
 
-        return
-                    
         
     def __str__(self):
         if self.is_empty():
@@ -204,13 +281,22 @@ def insert_bst(root,value):
     if root is None:
         return RBNode(value)
     
-    if value < root.value: 
-        root.left = insert_bst(root.left,value)
+    curr = root 
+    while curr != None:
+        prev = curr
+        if value < curr.value: 
+            curr = curr.left
+
+        else: 
+            curr = curr.right 
+
+    if value < prev.value: 
+        prev.left = RBNode(value) 
     
     else: 
-        root.right = insert_bst(root.right,value)
+        prev.right = RBNode(value)
 
-    return root
+    return root 
 
 # create random lists of size `length` up to `max_value`
 def create_random_list(length, max_value):
@@ -237,19 +323,26 @@ def create_random_bst(values):
 def create_random_rbt(values): 
 
     rbt = RBTree() 
-    rbt.insert(values[0])
-    rbt.insert(values[1])
     for value in values: 
-        #rbt.insert(value) 
-        break
-    #print(rbt)
+        rbt.insert(value) 
+        # print(f"Inserting {value}: {rbt}")
+
+
 
     return rbt
 
 
-l = create_random_list(5,30)
-# print(f"bst: {create_random_bst(l)}")
-# print(f"rbt: {create_random_rbt(l)}")
+# l = create_random_list(10000,20000)
+l = [i for i in range(10000)]
+# print(l2)
+
+bst = create_random_bst(l)
+rbt = create_random_rbt(l)
+
+# print(bst)
+print(bst.get_height())
+print(rbt.get_height())
+
 
 # Run an experiment where you create RBTs and BSTs based of randomly generated lists of numbers of length
 #   10,000.
@@ -321,4 +414,4 @@ def experiment3_4():
     
     return
 
-experiment3_4()
+# experiment3_4()
