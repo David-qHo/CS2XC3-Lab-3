@@ -1,5 +1,7 @@
 import random 
 import sys 
+import math 
+import matplotlib.pyplot as plt
 sys.setrecursionlimit(100000)
 
 class RBNode:
@@ -332,16 +334,18 @@ def create_random_rbt(values):
     return rbt
 
 
-# l = create_random_list(10000,20000)
-l = [i for i in range(10000)]
-# print(l2)
+def swap(L, i, j):
+    L[i], L[j] = L[j], L[i]
 
-bst = create_random_bst(l)
-rbt = create_random_rbt(l)
 
-# print(bst)
-print(bst.get_height())
-print(rbt.get_height())
+def create_near_sorted_list(length, max_value, swaps):
+    L = create_random_list(length, max_value)
+    L.sort()
+    for _ in range(swaps):
+        r1 = random.randint(0, length - 1)
+        r2 = random.randint(0, length - 1)
+        swap(L, r1, r2)
+    return L
 
 
 # Run an experiment where you create RBTs and BSTs based of randomly generated lists of numbers of length
@@ -358,10 +362,12 @@ def experiment1(n):
     # Generate n lists of size 10000, 
     bstHeight = 0
     rbtHeight = 0
+    max_value = 100000
+    length = 10000
     
 
     for i in range(n): 
-        rl = create_random_list(10000,2^14) # Max value 16384
+        rl = create_random_list(length,max_value) # Max value 16384
         bst = create_random_bst(rl)         # Generaete random bst
         rbt = create_random_rbt(rl)         # Generate random rbt
 
@@ -369,13 +375,54 @@ def experiment1(n):
         rbtHeight += rbt.get_height()
 
     # Compute average height difference between rbt and bst take absolute value 
-    avgDiff = abs(rbtHeight - bstHeight) / n 
+    avgDiff = (bstHeight - rbtHeight) / n 
 
 
 
+    return avgDiff
+
+# max_swaps = 46051
+# Want 100 lists, so skip -> 461
+def experiment2(): 
+    length = 10000
+    max_value = 100000
+    max_swaps = 150 #int(length * math.log(length) / 2)
+    # nearSortedLists = []
+    num_swaps = []
+    height_diff = []
+
+    # For every number of swaps 
+    for x in range(0,max_swaps,math.ceil(max_swaps/100)): # want 100 arrays 
+        num_swaps.append(x) # Store number of swaps 
+
+        # nearSortedLists = []
+        bstHeight = 0
+        rbtHeight = 0
+        avgDiff = 0
+        n = 10 # number of lists to generate 
+        # Generate 100 lists 
+        for _ in range(n): 
+            L = create_near_sorted_list(length,max_value,x)  # Generate random list for given num_swaps 
+            bstHeight += create_random_bst(L).get_height()  # Calculate bstHeight
+            rbtHeight += create_random_rbt(L).get_height()  # Calculate rbtHeight 
+
+        print("Finished iteration")
+
+        avgDiff = (bstHeight - rbtHeight) / n 
+
+        height_diff.append(avgDiff) 
+
+    plt.plot(num_swaps, height_diff, color='blue')
+    
+    plt.xlabel("Swaps")
+    plt.ylabel("Height diff")
+    plt.title("Average height diff b/w RBT and BST")
+    plt.legend()
+    plt.show()
 
 
     return 
+
 
 
 # ************** XC3 Tree Implementation *******************
@@ -414,4 +461,8 @@ def experiment3_4():
     
     return
 
-# experiment3_4()
+# *** RUN EXPERIMENTS ** 
+# print(experiment1(100))
+# experiment2()
+experiment3_4()
+
